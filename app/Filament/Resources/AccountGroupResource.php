@@ -2,16 +2,19 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AccountGroupResource\Pages;
-use App\Filament\Resources\AccountGroupResource\RelationManagers;
-use App\Models\AccountGroup;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\AccountGroup;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\AccountGroupResource\Pages;
+use App\Filament\Resources\AccountGroupResource\RelationManagers;
 
 class AccountGroupResource extends Resource
 {
@@ -23,19 +26,19 @@ class AccountGroupResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('primary_id')
-                    ->numeric(),
-                Forms\Components\Toggle::make('is_editable')
-                    ->required(),
-                Forms\Components\Toggle::make('is_deletable')
-                    ->required(),
-                Forms\Components\TextInput::make('user')
-                    ->required()
-                    ->numeric()
-                    ->default(1),
-            ]);
+                Toggle::make('is_primary')
+                    ->default(true)
+                    ->live()
+                    ->label('Is Primary Group'),
+                Select::make('primary_id')
+                    ->options(AccountGroup::all()->pluck('name', 'id'))
+                    ->nullable()
+                    ->hidden(fn($get) => $get('is_primary'))
+                    ->required(fn($get) => !$get('is_primary')),
+            ])
+            ->columns(3);
     }
 
     public static function table(Table $table): Table
@@ -45,23 +48,7 @@ class AccountGroupResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('primary_id')
-                    ->numeric()
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_editable')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('is_deletable')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('user')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
